@@ -1,4 +1,5 @@
 import * as functions from "@google-cloud/functions-framework";
+import { doPost } from "./twitterToBluesky";
 
 const accessToken = process.env.ACCESS_TOKEN;
 
@@ -14,7 +15,8 @@ export const twitterToBluesky = functions.http(
     }
 
     try {
-      res.json({ status: 200, message: "ok" });
+      const resp = await doPost(req.body);
+      res.json(resp);
     } catch (error: any) {
       const resp = { status: 500, message: `Unknown error: ${error}` };
       console.error(resp);
