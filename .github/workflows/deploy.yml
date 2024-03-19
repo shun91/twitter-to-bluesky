@@ -45,12 +45,12 @@ jobs:
 
       - id: "deploy"
         run: |
-          gcloud functions deploy twitterToBlueSky \
+          gcloud functions deploy twitterToBluesky \
             --gen2 \
             --runtime=nodejs18 \
             --region=asia-northeast1 \
             --source=./ \
             --trigger-http \
             --allow-unauthenticated \
-            --entry-point=twitterToBlueSky \
+            --entry-point=twitterToBluesky \
             --set-env-vars="ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }},ACCOUNT_ID=${{ secrets.ACCOUNT_ID }},PASSWORD=${{ secrets.PASSWORD }}"
