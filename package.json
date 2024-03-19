@@ -1,0 +1,20 @@
+{
+  "name": "twitter-to-bluesky",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "repository": "git@github.com:shun91/twitter-to-bluesky.git",
+  "author": "shun91 <shun9167@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "dev": "functions-framework --source=dist/ --target=twitterToBluesky"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.7.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}

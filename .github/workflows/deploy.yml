@@ -1,0 +1,56 @@
+# See:
+# https://github.com/google-github-actions/deploy-cloud-functions/issues/304#issuecomment-1476629207
+
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+    steps:
+      - uses: "actions/checkout@v3"
+
+      - id: "setup-node"
+        uses: "actions/setup-node@v2"
+        with:
+          node-version: 18.x
+
+      - id: "install"
+        run: yarn install --frozen-lockfile
+
+      - id: "build"
+        run: yarn build
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          workload_identity_provider: "${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.GCP_SERVICE_ACCOUNT }}"
+
+      - id: "setup-gcloud"
+        uses: "google-github-actions/setup-gcloud@v1"
+        with:
+          version: ">= 363.0.0"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
+
+      - id: "deploy"
+        run: |
+          gcloud functions deploy twitterToBlueSky \
+            --gen2 \
+            --runtime=nodejs18 \
+            --region=asia-northeast1 \
+            --source=./ \
+            --trigger-http \
+            --allow-unauthenticated \
+            --entry-point=twitterToBlueSky \
+            --set-env-vars="ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }},ACCOUNT_ID=${{ secrets.ACCOUNT_ID }},PASSWORD=${{ secrets.PASSWORD }}"
