@@ -69,6 +69,7 @@ function createPostParams(loadedData: any, data: any) {
         createdAt: new Date().toISOString(),
         langs: ["ja", "en"],
         $type: "app.bsky.feed.post",
+        facets: createLinkFacets(originalTweet),
         // embed: embed
       },
     }),
@@ -79,4 +80,42 @@ async function postRecord(params: any) {
   const url = getEndpoint("/com.atproto.repo.createRecord");
   const resp = await fetch(url, params);
   return resp.json();
+}
+
+function createLinkFacets(text: string) {
+  const linkRegex = /https?:\/\/\S*/g;
+  let match;
+  const facets = [];
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    const url = match[0];
+    const byteStart = getBytePosition(text, match.index);
+    const byteEnd = byteStart + getByteLength(url);
+
+    const facet = {
+      index: {
+        byteStart,
+        byteEnd,
+      },
+      features: [
+        {
+          $type: "app.bsky.richtext.facet#link",
+          uri: url,
+        },
+      ],
+    };
+
+    facets.push(facet);
+  }
+
+  return facets;
+}
+
+function getByteLength(str: string): number {
+  return new Blob([str]).size;
+}
+
+function getBytePosition(text: string, position: number): number {
+  const substring = text.substring(0, position);
+  return getByteLength(substring);
 }
