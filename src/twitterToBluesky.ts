@@ -43,18 +43,6 @@ async function createSession() {
 }
 
 function createPostParams(loadedData: any, data: any) {
-  const originalTweet = data.tweet;
-  const rmUrlTweet = removeURL(originalTweet);
-  const userName = data.userName;
-  const uri = data.uri;
-  const embed = {
-    $type: "app.bsky.embed.external",
-    external: {
-      uri: uri,
-      title: `Tweet by @${userName}`,
-      description: truncateString(rmUrlTweet),
-    },
-  };
   return {
     method: "post",
     headers: {
@@ -65,12 +53,11 @@ function createPostParams(loadedData: any, data: any) {
       repo: loadedData.did,
       collection: "app.bsky.feed.post",
       record: {
-        text: originalTweet,
+        text: data.tweet,
         createdAt: new Date().toISOString(),
         langs: ["ja", "en"],
         $type: "app.bsky.feed.post",
-        facets: createLinkFacets(originalTweet),
-        // embed: embed
+        facets: createLinkFacets(data.tweet),
       },
     }),
   };
