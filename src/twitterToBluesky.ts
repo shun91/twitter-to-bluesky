@@ -1,10 +1,12 @@
+import { replaceShortUrlsInText } from "./replaceShortUrl";
+
 const bskyEmail = process.env.BSKY_EMAIL;
 const bskyAppPass = process.env.BSKY_APP_PASS;
 const bskyHost = "bsky.social";
 
 export async function doPost(data: any) {
   const loadedData = await createSession();
-  const params = createPostParams(loadedData, data);
+  const params = await createPostParams(loadedData, data);
   return postRecord(params);
 }
 
@@ -42,7 +44,8 @@ async function createSession() {
   return response.json();
 }
 
-function createPostParams(loadedData: any, data: any) {
+async function createPostParams(loadedData: any, data: any) {
+  const text = await replaceShortUrlsInText(data.tweet);
   return {
     method: "post",
     headers: {
@@ -53,11 +56,11 @@ function createPostParams(loadedData: any, data: any) {
       repo: loadedData.did,
       collection: "app.bsky.feed.post",
       record: {
-        text: data.tweet,
+        text,
         createdAt: new Date().toISOString(),
         langs: ["ja", "en"],
         $type: "app.bsky.feed.post",
-        facets: createLinkFacets(data.tweet),
+        facets: createLinkFacets(text),
       },
     }),
   };
