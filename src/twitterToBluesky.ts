@@ -1,14 +1,10 @@
 import { replaceShortUrlsInText } from "./replaceShortUrl";
 
+type LoadedData = { accessJwt: string; did: string };
+
 const bskyEmail = process.env.BSKY_EMAIL;
 const bskyAppPass = process.env.BSKY_APP_PASS;
 const bskyHost = "bsky.social";
-
-export async function doPost(data: any) {
-  const loadedData = await createSession();
-  const params = await createPostParams(loadedData, data);
-  return postRecord(params);
-}
 
 function getEndpoint(path: string) {
   const baseUrl = `https://${bskyHost}`;
@@ -30,35 +26,17 @@ async function createSession() {
     headers: { "Content-Type": "application/json; charset=UTF-8" },
     body: JSON.stringify(payload),
   });
-  return response.json();
+  const loadedData: LoadedData = await response.json();
+  return loadedData;
 }
 
-async function createPostParams(loadedData: any, data: any) {
-  const text = await replaceShortUrlsInText(data.tweet);
-  return {
-    method: "post",
-    headers: {
-      "Content-Type": "application/json; charset=UTF-8",
-      Authorization: `Bearer ${loadedData.accessJwt}`,
-    },
-    body: JSON.stringify({
-      repo: loadedData.did,
-      collection: "app.bsky.feed.post",
-      record: {
-        text,
-        createdAt: new Date().toISOString(),
-        langs: ["ja", "en"],
-        $type: "app.bsky.feed.post",
-        facets: createLinkFacets(text),
-      },
-    }),
-  };
+function getByteLength(str: string): number {
+  return new Blob([str]).size;
 }
 
-async function postRecord(params: any) {
-  const url = getEndpoint("/com.atproto.repo.createRecord");
-  const resp = await fetch(url, params);
-  return resp.json();
+function getBytePosition(text: string, position: number): number {
+  const substring = text.substring(0, position);
+  return getByteLength(substring);
 }
 
 function createLinkFacets(text: string) {
@@ -90,11 +68,33 @@ function createLinkFacets(text: string) {
   return facets;
 }
 
-function getByteLength(str: string): number {
-  return new Blob([str]).size;
+async function createParams(loadedData: LoadedData, tweetText: string) {
+  const text = await replaceShortUrlsInText(tweetText);
+  return {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json; charset=UTF-8",
+      Authorization: `Bearer ${loadedData.accessJwt}`,
+    },
+    body: JSON.stringify({
+      repo: loadedData.did,
+      collection: "app.bsky.feed.post",
+      record: {
+        text,
+        createdAt: new Date().toISOString(),
+        langs: ["ja", "en"],
+        $type: "app.bsky.feed.post",
+        facets: createLinkFacets(text),
+      },
+    }),
+  };
 }
 
-function getBytePosition(text: string, position: number): number {
-  const substring = text.substring(0, position);
-  return getByteLength(substring);
+export async function createRecord(tweetText: string) {
+  const loadedData = await createSession();
+  const params = await createParams(loadedData, tweetText);
+
+  const url = getEndpoint("/com.atproto.repo.createRecord");
+  const resp = await fetch(url, params);
+  return resp.json();
 }
