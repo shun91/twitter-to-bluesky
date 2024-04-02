@@ -10,17 +10,6 @@ export async function doPost(data: any) {
   return postRecord(params);
 }
 
-function removeURL(str: string) {
-  return str.replace(/(https?:\/\/[^\s]+)/g, "");
-}
-
-function truncateString(str: string) {
-  if (str.length > 75) {
-    return str.substring(0, 75) + "...";
-  }
-  return str;
-}
-
 function getEndpoint(path: string) {
   const baseUrl = `https://${bskyHost}`;
   if (!path.startsWith("/")) {
